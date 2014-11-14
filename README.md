@@ -1,5 +1,7 @@
 ### Introduction ###
 
+Project on [GitHub](skh@git.drupal.org:sandbox/skh/simplequiz.git) and [Drupal](https://www.drupal.org/sandbox/skh/simplequiz).
+
 ### Optional, Included Addons ###
 
 #### SimpleQuiz UX
