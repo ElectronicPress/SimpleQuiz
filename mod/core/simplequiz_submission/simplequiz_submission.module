@@ -1,0 +1,188 @@
+<?php
+
+/**
+ * @file
+ * Module functionality for simplequiz_submission.module.
+ */
+
+// Load the callbacks.
+module_load_include('inc', 'simplequiz_submission', 'simplequiz_submission.callbacks');
+
+/**
+ * Implements hook_menu().
+ */
+function simplequiz_submission_menu() {
+
+  // Store the menu definitions.
+  $items = array();
+
+  // Viewing a submission.
+  $items['simplequiz/submission/%simplequiz_entity_object'] = array(
+    'title' => 'Quiz Submission',
+    'page callback' => 'entity_view',
+    'page arguments' => array('simplequiz_submission', 2),
+    'load arguments' => array('simplequiz_submission'),
+    // @todo: access callback.
+    'access callback' => TRUE,
+  );
+
+  // Return the menu definitions.
+  return $items;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function simplequiz_submission_theme() {
+
+  // Return the array of theme definitions.
+  return array(
+
+    // Overview of a quiz submission.
+    'simplequiz_submission_overview' => array(
+      'variables' => array(
+        'submission_wrapper' => NULL,
+        'account_quiz_stats' => NULL,
+      ),
+      'file' => 'simplequiz_submission.theme.inc',
+    ),
+
+    // Table of submission responses.
+    'simplequiz_submission_responses' => array(
+      'variables' => array(
+        'submission_wrapper' => NULL,
+      ),
+      'file' => 'simplequiz_submission.theme.inc',
+    ),
+  );
+}
+
+/**
+ * Implements hook_entity_info().
+ */
+function simplequiz_submission_entity_info() {
+
+  // Store custom entity type definitions.
+  $info = array();
+
+  // The SimpleQuizSubmission entity type.
+  $info['simplequiz_submission'] = array(
+    'label' => t('SimpleQuiz Submission'),
+    'base table' => 'simplequiz_submission',
+    'entity keys' => array('id' => 'sid'),
+    'uri callback' => 'entity_class_uri',
+    'entity class' => 'Drupal\simplequiz_submission\Entity\SimpleQuizSubmissionEntity',
+    'controller class' => 'Drupal\simplequiz_submission\Controller\SimpleQuizSubmissionController',
+    'module' => 'simplequiz_submission',
+    'access callback' => 'simplequiz_submission_access_callback',
+    'fieldable' => TRUE,
+  );
+
+  // Return the entity type definitions.
+  return $info;
+}
+
+/**
+ * Implements hook_entity_property_info().
+ */
+function simplequiz_submission_entity_property_info() {
+
+  // Store the info definitions.
+  $info = array();
+
+  // Get the submission properties.
+  $info['simplequiz_submission']['properties'] = array(
+
+    // Add the sid property.
+    'sid' => array(
+      'label' => t('Submission ID'),
+      'description' => t('Identifier for a submission.'),
+      'type' => 'integer',
+      'schema field' => 'sid',
+    ),
+
+    // Add the Question NID property.
+    'snid' => array(
+      'label' => t('Question NID'),
+      'description' => t('The node id of the simplequiz.'),
+      'type' => 'integer',
+      'schema field' => 'snid',
+      'setter callback' => 'entity_property_verbatim_set',
+    ),
+
+    // Add the account uid property.
+    'uid' => array(
+      'label' => t('Account UID'),
+      'description' => t('Identifier for the user account this result belongs to.'),
+      'type' => 'integer',
+      'schema field' => 'uid',
+      'setter callback' => 'entity_property_verbatim_set',
+    ),
+
+    // Add the maximum score property.
+    'score_max' => array(
+      'label' => t('Maximum Obtainable Score'),
+      'description' => t('The maximum possible score.'),
+      'type' => 'integer',
+      'schema field' => 'score_max',
+      'setter callback' => 'entity_property_verbatim_set',
+    ),
+
+    // Add the pass_percent property.
+    'pass_percent' => array(
+      'label' => t('Pass Percentage'),
+      'description' => t('The The percent required to pass the quiz.'),
+      'type' => 'float',
+      'schema field' => 'pass_percent',
+      'setter callback' => 'entity_property_verbatim_set',
+    ),
+
+    // Add the created property.
+    'created' => array(
+      'label' => t('Created'),
+      'description' => t('The Unix timestamp when the submission was created.'),
+      'type' => 'integer',
+      'schema field' => 'created',
+      'setter callback' => 'entity_property_verbatim_set',
+    ),
+
+    // Add the created property.
+    'changed' => array(
+      'label' => t('Updated'),
+      'description' => t('The Unix timestamp when the submission was updated.'),
+      'type' => 'integer',
+      'schema field' => 'created',
+      'setter callback' => 'entity_property_verbatim_set',
+    ),
+
+    // Add user_score property.
+    'user_score' => array(
+      'label' => t('User Score'),
+      'description' => t('The score the user received.'),
+      'type' => 'integer',
+      'getter callback' => 'simplequiz_submission_property_user_score_get',
+      'computed' => TRUE,
+    ),
+
+    // Add user_percent property.
+    'user_percent' => array(
+      'label' => t('User Percent'),
+      'description' => t('The percent the user received.'),
+      'type' => 'integer',
+      'getter callback' => 'simplequiz_submission_property_user_percent_get',
+      'computed' => TRUE,
+    ),
+
+    // Add user_passed property.
+    'user_passed' => array(
+      'label' => t('Passed'),
+      'description' => t('If the user passed the course.'),
+      'type' => 'boolean',
+      'getter callback' => 'simplequiz_submission_property_user_passed_get',
+      'computed' => TRUE,
+    ),
+  );
+
+  // Return the property definitions.
+  return $info;
+}

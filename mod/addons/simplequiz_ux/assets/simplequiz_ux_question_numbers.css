@@ -1,0 +1,13 @@
+/**
+ * @file
+ * Counter for SimpleQuiz quiz form questions.
+ */
+
+.simplequiz-questions {
+  counter-reset: simplequiz-questions;
+}
+
+.simplequiz-questions > .form-item > label:before {
+  content: counter(simplequiz-questions) ". ";
+  counter-increment: simplequiz-questions;
+}

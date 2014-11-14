@@ -1,0 +1,232 @@
+<?php
+
+/**
+ * @file
+ * Main module functionality for simplequiz_ux.module.
+ */
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * The simplequiz administration quiz.
+ *
+ * {@inheritdoc}
+ */
+function simplequiz_ux_form_simplequiz_admin_form_alter(&$form) {
+
+  // SimpleQuiz UX Settings Fieldset.
+  $form['simplequiz_ux'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('SimpleQuiz UX'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+
+    // Hide status field in IEF.
+    'simplequiz_ux_hide_status_checkbox_ief' => array(
+      '#type' => 'checkbox',
+      '#title' => t('Hide the "Status" field in the IEF.'),
+      '#default_value' => variable_get('simplequiz_ux_hide_status_checkbox_ief', 1),
+    ),
+
+    // Hide status column in IEF.
+    'simplequiz_ux_hide_status_column' => array(
+      '#type' => 'checkbox',
+      '#title' => t('Hide the "Status" column in the IEF table.'),
+      '#default_value' => variable_get('simplequiz_ux_hide_status_column', 1),
+    ),
+
+
+    // Show solution column in IEF table.
+    'simplequiz_ux_show_solution_column_ief' => array(
+      '#type' => 'checkbox',
+      '#title' => t('Show solution column in IEF table for simplequiz_answer.'),
+      '#default_value' => variable_get('simplequiz_ux_show_solution_column_ief', 1),
+    ),
+
+    // Quiz form JS.
+    'simplequiz_ux_quiz_form_js' => array(
+      '#type' => 'checkbox',
+      '#title' => t('SimpleQuiz form JavaScript'),
+      '#description' => t('Add JavaScript to notify user of questions missed and confirm form submission on the SimpleQuiz quiz form.'),
+      '#default_value' => variable_get('simplequiz_ux_quiz_form_js', 1),
+    ),
+
+    // Confirmation message.
+    'simplequiz_ux_quiz_form_confirmation_message' => array(
+      '#type' => 'textfield',
+      '#title' => t('SimpleQuiz submission confirmation message'),
+      '#description' => t('The JavaScript confirm() that will be display to a user when the submit a completed quiz.'),
+      '#default_value' => variable_get('simplequiz_ux_quiz_form_confirmation_message', 'Are you sure you want to submit this quiz?  You will not be able to go back and modify your answers.'),
+      '#states' => array(
+        'visible' => array(
+          ':input[name="simplequiz_ux_quiz_form_js"]' => array(
+            'checked' => TRUE,
+          ),
+        ),
+      ),
+    ),
+
+    // Results filter JS.
+    'simplequiz_ux_quiz_results_filter_js' => array(
+      '#type' => 'checkbox',
+      '#title' => t('SimpleQuiz results JavaScript'),
+      '#description' => t('Add simple JavaScript to the results page that allows the user to filter results.'),
+      '#default_value' => variable_get('simplequiz_ux_quiz_results_filter_js', 1),
+    ),
+
+    // Results filter count.
+    'simplequiz_ux_quiz_results_filter_js_count' => array(
+      '#type' => 'textfield',
+      '#cols' => 2,
+      '#title' => t('Results Threshold'),
+      '#description' => t('The number of results that must be available to add the Results Filtering JS above.'),
+      '#default_value' => variable_get('simplequiz_ux_quiz_results_filter_js_count', 10),
+      '#states' => array(
+        'visible' => array(
+          ':input[name="simplequiz_ux_quiz_results_filter_js"]' => array(
+            'checked' => TRUE,
+          ),
+        ),
+      ),
+    ),
+
+    // Show question numbers on a quiz.
+    'simplequiz_ux_quiz_form_numbers' => array(
+      '#type' => 'checkbox',
+      '#title' => t('Add numbers to questions on a SimpleQuiz form.'),
+      '#default_value' => variable_get('simplequiz_ux_quiz_form_numbers', 1),
+    ),
+  );
+}
+
+/**
+ * Implements hook_inline_entity_form_entity_form_alter().
+ *
+ * {@inheritdoc}
+ */
+function simplequiz_ux_inline_entity_form_entity_form_alter(&$entity_form, &$form_state) {
+
+  if (
+
+    // Flag set.
+    variable_get('simplequiz_ux_hide_status_checkbox_ief', 1) &&
+
+    // Is a simplequiz.
+    $form_state['build_info']['args'][0]->type == 'simplequiz'
+  ) {
+
+    // Hide the status.
+    $entity_form['status']['#access'] = FALSE;
+  }
+}
+
+/**
+ * Implements hook_inline_entity_form_table_fields_alter().
+ *
+ * {@inheritdoc}
+ */
+function simplequiz_ux_inline_entity_form_table_fields_alter(&$fields, $context) {
+
+  // Make sure it's a field we're responsible form.
+  if (!in_array($context['field_name'], array('field_answer', 'field_question'))) {
+
+    // Bail out.
+    return NULL;
+  }
+
+  // See if we should hide status columns.
+  if (variable_get('simplequiz_ux_hide_status_column', 1)) {
+    unset($fields['status']);
+  }
+
+  if (
+
+    // Flag set.
+    variable_get('simplequiz_ux_show_solution_column_ief', 1) &&
+
+    // Is the right field.
+    $context['field_name'] == 'field_answer'
+  ) {
+
+    // Add the solution column.
+    $fields['field_solution'] = array(
+      'type' => 'field',
+      'label' => t('Solution'),
+    );
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * The SimpleQuiz quiz form.
+ *
+ * {@inheritdoc}
+ */
+function simplequiz_ux_form_simplequiz_quiz_form_alter(&$form) {
+
+  // Check for flag.
+  if (variable_get('simplequiz_ux_quiz_form_js', 1)) {
+
+    // Add the JS.
+    $form['#attached']['js'][]
+      = drupal_get_path('module', 'simplequiz_ux') . '/assets/simplequiz_ux.form.js';
+
+    // Confirm message.
+    $quiz_form_confirm = variable_get(
+      'simplequiz_ux_quiz_form_confirmation_message',
+      'Are you sure you want to submit this quiz?  You will not be able to go back and modify your answers.'
+    );
+
+    // Add the confirmation message as a setting.
+    drupal_add_js(
+      array(
+        'simplequizUx' => array(
+          'quizFormConfirmation' => t(
+            '@quiz_form_confirm',
+            array('@quiz_form_confirm' => $quiz_form_confirm)
+          ),
+        ),
+      ),
+      'setting'
+    );
+  }
+
+  // Check if quz question numbers enabled.
+  if (variable_get('simplequiz_ux_quiz_form_numbers', 1)) {
+
+    // Add quiz question numbers css.
+    $form['#attached']['css'][]
+      = drupal_get_path('module', 'simplequiz_ux') .
+        '/assets/simplequiz_ux_question_numbers.css';
+  }
+}
+
+/**
+ * Implements hook_preprocess_simplequiz_results().
+ */
+function simplequiz_ux_preprocess_simplequiz_results() {
+
+  // Check for flag.
+  if (variable_get('simplequiz_ux_quiz_results_js', 1)) {
+
+    // Add the setting for number of results.
+    drupal_add_js(
+      array(
+        'simplequizUx' => array(
+          'quizResultsJsCount' => variable_get(
+            'simplequiz_ux_quiz_results_filter_js_count',
+            10
+          ),
+        ),
+      ),
+      'setting'
+    );
+
+    // Add the JS.
+    drupal_add_js(
+      drupal_get_path('module', 'simplequiz_ux') .
+      '/assets/simplequiz_ux.tablefilter.js'
+    );
+  }
+}

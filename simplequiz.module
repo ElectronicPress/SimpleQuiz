@@ -1,0 +1,212 @@
+<?php
+
+/**
+ * @file
+ * Main functionality for simplequiz.module.
+ */
+
+use Drupal\simplequiz\Stats\SimpleQuizAccountQuizStats;
+
+// Load callbacks.
+module_load_include('inc', 'simplequiz', 'inc/simplequiz.callbacks');
+
+/**
+ * Implements hook_menu().
+ */
+function simplequiz_menu() {
+
+  // Store the menu definitions.
+  $items = array();
+
+  // The simplequiz.module quiz form.
+  $items['node/%simplequiz_emw/simplequiz'] = array(
+    'title' => 'Quiz',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('simplequiz_quiz_form', 1),
+    'access callback' => '_simplequiz_quiz_form_access',
+    'access arguments' => array(1),
+    'load arguments' => array('node'),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'inc/simplequiz.forms.inc',
+  );
+
+  // The simplequiz.module quiz form.
+  $items['node/%simplequiz_emw/simplequiz-results'] = array(
+    'title' => 'Results',
+    'page callback' => 'simplequiz_results_table',
+    'page arguments' => array(1),
+    'load arguments' => array('node'),
+    'access callback' => '_simplequiz_quiz_results_access',
+    'access arguments' => array(1),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'inc/simplequiz.callbacks.inc',
+  );
+
+  // SimpleQuiz administration settings.
+  $items['admin/config/simplequiz'] = array(
+    'title' => 'SimpleQuiz',
+    'description' => 'SimpleQuiz Administration.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('simplequiz_admin_form'),
+    'access arguments' => array('administer simplequiz'),
+    'file' => 'inc/simplequiz.admin.inc',
+  );
+
+  // Return the menu definitions.
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function simplequiz_permission() {
+
+  // Return the permission definitions.
+  return array(
+
+    // User can administer SimpleQuiz.
+    'administer simplequiz' => array(
+      'title' => t('Administer SimpleQuiz'),
+    ),
+
+    // User can administer SimpleQuiz.
+    'take simplequiz' => array(
+      'title' => t('Take SimpleQuiz'),
+    ),
+
+    // User can view their own SimpleQuiz results.
+    'view own simplequiz results' => array(
+      'title' => t('View own SimpleQuiz results'),
+    ),
+
+    // User can view any SimpleQuiz results.
+    'view any simplequiz results' => array(
+      'title' => t('View any SimpleQuiz results'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_form().
+ *
+ * {@inheritdoc}
+ */
+function simplequiz_form($node, $form_state) {
+  return node_content_form($node, $form_state);
+}
+
+/**
+ * Implements hook_node_info().
+ */
+function simplequiz_node_info() {
+
+  // Return node type definitions.
+  return array(
+
+    // Quiz content type.
+    'simplequiz' => array(
+      'name' => t('SimpleQuiz'),
+      'base' => 'simplequiz',
+      'description' => t('Simple scored quiz for users'),
+      'locked' => TRUE,
+    ),
+
+    // Question content type.
+    'simplequiz_question' => array(
+      'name' => t('Question'),
+      'base' => 'simplequiz',
+      'description' => t('A question for a quiz'),
+      'title_label' => t('Question'),
+      'locked' => TRUE,
+    ),
+
+    // Answer content type.
+    'simplequiz_answer' => array(
+      'name' => t('Answer'),
+      'base' => 'simplequiz',
+      'description' => t('An answer to a question'),
+      'title_label' => t('Answer'),
+      'locked' => TRUE,
+    ),
+  );
+}
+
+/**
+ * Implements hook_theme().
+ */
+function simplequiz_theme() {
+
+  // Return the array of theme definitions.
+  return array(
+
+    // Overview of a SimpleQuiz.
+    'simplequiz_overview' => array(
+      'variables' => array(
+        'account_quiz_stats' => NULL,
+      ),
+      'file' => 'inc/simplequiz.theme.inc',
+    ),
+
+    // Results for a SimpleQuiz.
+    'simplequiz_results' => array(
+      'variables' => array(
+        'results_quiz_stats' => NULL,
+      ),
+      'file' => 'inc/simplequiz.theme.inc',
+    ),
+  );
+}
+
+/**
+ * Implements hook_view().
+ *
+ * {@inheritdoc}
+ */
+function simplequiz_view($node) {
+
+  // If it's a simplequiz and a page.
+  if ($node->type == 'simplequiz' && node_is_page($node)) {
+
+    // Set the overview table on the node.
+    $node->content['simplequiz_overview'] = array(
+      '#theme' => 'simplequiz_overview',
+      '#account_quiz_stats' => new SimpleQuizAccountQuizStats(),
+    );
+  }
+
+  // Other types and view modes shouldn't be visible to non-administrators.
+  elseif (!user_access('administer simplequiz')) {
+    drupal_access_denied();
+  }
+
+  // Return the node.
+  return $node;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * The simplequiz.module node form.
+ *
+ * {@inheritdoc}
+ */
+function simplequiz_form_simplequiz_node_form_alter(&$form) {
+
+  // New node.
+  if (is_null($form['nid']['#value'])) {
+
+    // Default attempts allowed.
+    $form['field_attempts_allowed'][LANGUAGE_NONE][0]['value']['#default_value']
+      = variable_get('simplequiz_attempts_allowed', 0);
+
+    // Default pass percentage.
+    $form['field_pass_percentage'][LANGUAGE_NONE][0]['value']['#default_value']
+      = variable_get('simplequiz_pass_percentage', 70);
+
+    $form['field_pass_percentage'][LANGUAGE_NONE][0]['value']['#default_value']
+      = variable_get('simplequiz_pass_percentage', 70);
+
+    $form['field_randomize_order'][LANGUAGE_NONE]['#default_value']
+      = variable_get('simplequiz_randomize_order', 0);
+  }
+}

@@ -1,0 +1,12 @@
+name = SimpleQuiz
+package = SimpleQuiz
+description = Simple Quizzes for users.
+core = 7.x
+configure = admin/config/simplequiz
+
+dependencies[] = list
+dependencies[] = number
+dependencies[] = options
+dependencies[] = xautoload
+dependencies[] = entityreference
+dependencies[] = inline_entity_form

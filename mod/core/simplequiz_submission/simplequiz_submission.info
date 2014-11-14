@@ -1,0 +1,6 @@
+name = SimpleQuiz Submission
+package = SimpleQuiz
+description = SimpleQuiz Submission Entity Handling
+core = 7.x
+hidden = TRUE
+dependencies[] = simplequiz_response

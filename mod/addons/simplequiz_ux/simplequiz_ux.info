@@ -1,0 +1,5 @@
+name = SimpleQuiz User Experience
+package = SimpleQuiz
+description = Adds options to clean up the UX of simplequiz.
+core = 7.x
+dependencies[] = simplequiz

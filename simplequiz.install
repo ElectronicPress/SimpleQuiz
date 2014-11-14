@@ -1,0 +1,57 @@
+<?php
+
+/**
+ * @file
+ * [Un]installation functionality for simplequiz.module.
+ */
+
+use Drupal\simplequiz\Installer\SimpleQuizInstaller;
+use Drupal\simplequiz\Installer\SimpleQuizInstallerInstall;
+use Drupal\simplequiz\Installer\SimpleQuizInstallerUninstall;
+
+/**
+ * Implements hook_enable().
+ */
+function simplequiz_enable() {
+
+  // Get the settings.
+  $settings = new SimpleQuizInstaller();
+
+  // Enable our hidden sub modules.
+  module_enable($settings->submodules);
+}
+
+/**
+ * Implements hook_disable().
+ */
+function simplequiz_disable() {
+
+  // Get the settings.
+  $settings = new SimpleQuizInstaller();
+
+  // Disable our hidden modules.
+  module_disable($settings->submodules);
+}
+
+/**
+ * Implements hook_install().
+ */
+function simplequiz_install() {
+
+  // Run the installation.
+  $settings = new SimpleQuizInstallerInstall();
+  $settings->install();
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function simplequiz_uninstall() {
+
+  // Ensure classes have been loaded prior to (un)installation.
+  xautoload()->finder->addPsr4('Drupal\simplequiz\\', __DIR__ . '/src');
+
+  // Run the un-installation.
+  $settings = new SimpleQuizInstallerUninstall();
+  $settings->uninstall();
+}

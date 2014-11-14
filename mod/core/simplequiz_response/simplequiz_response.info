@@ -1,0 +1,5 @@
+name = SimpleQuiz Response
+package = SimpleQuiz
+description = SimpleQuiz Response Entity Handling
+core = 7.x
+hidden = TRUE

@@ -1,0 +1,5 @@
+name = SimpleQuiz Certificate
+package = SimpleQuiz
+description = Allows a user to download a private file if they have passed the quiz.
+core = 7.x
+dependencies[] = simplequiz

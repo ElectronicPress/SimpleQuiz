@@ -1,0 +1,72 @@
+<?php
+
+/**
+ * @file
+ * Installation functionality for simplequiz_response.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function simplequiz_response_schema() {
+
+  // Save the scheme definition.
+  $schema = array();
+
+  // Response schema.
+  $schema['simplequiz_response'] = array(
+    'description' => 'Stores the responses users provided.',
+    'fields' => array(
+      'rid' => array(
+        'description' => 'Identifier for a response (selection) to a question.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'sid' => array(
+        'description' => 'The submission set this response belongs to.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'qnid' => array(
+        'description' => 'The node id of the simplequiz_question.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'question' => array(
+        'description' => 'The title of the question.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'response' => array(
+        'description' => 'The title of the response the user entered.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'solution' => array(
+        'description' => 'The title of the correct answer.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'points' => array(
+        'description' => 'The number of point received for this response.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('rid'),
+  );
+
+  // Return the scheme definitions.
+  return $schema;
+}

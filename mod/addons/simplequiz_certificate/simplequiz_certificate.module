@@ -1,0 +1,157 @@
+<?php
+
+/**
+ * @file
+ * Main functionality for simplequiz.module.
+ */
+
+use Drupal\simplequiz\Stats\SimpleQuizAccountQuizStats;
+
+/**
+ * Implements hook_field_access().
+ *
+ * {@inheritdoc}
+ */
+function simplequiz_certificate_field_access($op, $field, $entity_type, $entity) {
+
+  // Check if viewing the file.
+  if ($op != 'view') {
+
+    // Not concerned.
+    return NULL;
+  }
+
+  // Check if it's our field.
+  if ($field['field_name'] != 'filed_file_simplequiz_private') {
+
+    // Not concerned.
+    return NULL;
+  }
+
+  // Check it's a simplequiz.
+  if (empty($entity->type) || $entity->type != 'simplequiz') {
+
+    // Not concerned.
+    return NULL;
+  }
+
+  // Get the account quiz stats.
+  $account_quiz_stats = new SimpleQuizAccountQuizStats();
+
+  // If they're an administrator.
+  if ($account_quiz_stats->getAccountIsAdministrator()) {
+
+    // Only show messages once.
+    static $messages;
+
+    // See if we've shown.
+    if (!is_null($messages)) {
+
+      // Just allow them.
+      return TRUE;
+    }
+
+    // Has the admin passed.
+    if ($account_quiz_stats->getAccountHasPassed()) {
+
+      // Tell them what's up.
+      drupal_set_message(t('You have not passed this course but have the bypass permission.'), 'warning');
+    }
+
+    else {
+
+      // Tell them what's up.
+      drupal_set_message(t('You have already passed this course but have the bypass permission.'), 'warning');
+
+    }
+
+    // Set messages shown flag.
+    $messages = TRUE;
+
+    // Show it.
+    return TRUE;
+  }
+
+  // If they've passed.
+  if ($account_quiz_stats->getAccountHasPassed()) {
+
+    // Show it.
+    return TRUE;
+  }
+
+  // Otherwise don't show.
+  return FALSE;
+}
+
+/**
+ * Implements hook_file_access().
+ *
+ * {@inheritdoc}
+ */
+function simplequiz_certificate_file_download($uri) {
+
+  // Check if they have the bypass permission.
+  if (user_access('administer simplequiz')) {
+
+    // Not concerned.
+    return NULL;
+  }
+
+  // Get the node this file is attached to.
+  $nid = db_select('file_usage', 'fu')
+    ->fields('fu', array('id'))
+    ->condition('fu.type', 'node')
+    ->condition('fm.uri', $uri, '=')
+    ->condition('n.type', 'simplequiz');
+
+  // Join the tables.
+  $nid->innerJoin('file_managed', 'fm', 'fm.fid = fu.fid');
+  $nid->innerJoin('node', 'n', 'fu.id = n.nid');
+
+  // Execute the query and get the node id.
+  $nid = $nid->execute()->fetchField();
+
+  // Check that it's a file we're protecting.
+  if (empty($nid)) {
+
+    // Not concerned.
+    return NULL;
+  }
+
+  // Load the node wrapper.
+  $node_wrapper = simplequiz_emw_load($nid, 'node');
+
+  // Get the account stats.
+  $account_quiz_stats = new SimpleQuizAccountQuizStats($node_wrapper);
+
+  // See if they've already passed.
+  return $account_quiz_stats->getAccountHasPassed();
+}
+
+/**
+ * Implements hook_simplequiz_submission_overview_alter().
+ *
+ * {@inheritdoc}
+ */
+function simplequiz_certificate_simplequiz_submission_overview_alter(&$build, $submission_wrapper, $account_quiz_stats) {
+
+  if (
+
+    // User passed.
+    $submission_wrapper->user_passed->value() &&
+
+    // Node has attachment.
+    count($account_quiz_stats->getNodeWrapper()->field_file_simplequiz_private)
+  ) {
+
+    // Show certificate message.
+    $build['overview']['result'][] = array(
+      '#prefix' => '<p>',
+      '#suffix' => '</p>',
+      '#markup' => t(
+        'Your certificate is available on the <a href="@quiz_url">Quiz Homepage</a>.',
+        array('@quiz_url' => url('node/' . $submission_wrapper->snid->value()))
+      ),
+    );
+  }
+}

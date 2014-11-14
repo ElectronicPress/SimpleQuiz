@@ -1,0 +1,95 @@
+<?php
+
+/**
+ * @file
+ * Installation functionality for simplequiz_submission.
+ */
+
+// Ensure classes have been loaded prior to (un)installation.
+xautoload()->finder->addPsr4('Drupal\simplequiz_submission\\', __DIR__ . '/src');
+
+use Drupal\simplequiz_submission\Installer\SimpleQuizSubmissionInstaller;
+
+/**
+ * Implements hook_install().
+ */
+function simplequiz_submission_install() {
+
+  // Run the installation.
+  $settings = new SimpleQuizSubmissionInstaller();
+  $settings->install();
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function simplequiz_submission_uninstall() {
+
+  // Run the un-installation.
+  $settings = new SimpleQuizSubmissionInstaller();
+  $settings->uninstall();
+}
+
+/**
+ * Implements hook_schema().
+ */
+function simplequiz_submission_schema() {
+
+  // Save the scheme definition.
+  $schema = array();
+
+  // Submission schema.
+  $schema['simplequiz_submission'] = array(
+    'description' => 'The base table for simplequiz.',
+    'fields' => array(
+      'sid' => array(
+        'description' => 'Identifier for a submission.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'snid' => array(
+        'description' => 'The node id of the simplequiz.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'uid' => array(
+        'description' => 'Identifier for the user account this result belongs to.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'score_max' => array(
+        'description' => 'The maximum possible score.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'pass_percent' => array(
+        'description' => 'The The percent required to pass the quiz.',
+        'type' => 'float',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'created' => array(
+        'description' => 'The Unix timestamp when the submission was created.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'changed' => array(
+        'description' => 'The Unix timestamp when the submission was changed.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('sid'),
+  );
+
+  // Return the schema definitions.
+  return $schema;
+}

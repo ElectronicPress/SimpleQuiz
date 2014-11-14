@@ -1,0 +1,99 @@
+<?php
+
+/**
+ * @file
+ * Pseudo-Module functionality for simplequiz_response.
+ */
+
+/**
+ * Implements hook_entity_info().
+ */
+function simplequiz_response_entity_info() {
+
+  // Store custom entity type definitions.
+  $info = array();
+
+  // The SimpleQuizResponseEntity entity type.
+  $info['simplequiz_response'] = array(
+    'label' => t('SimpleQuiz Response'),
+    'base table' => 'simplequiz_response',
+    'entity keys' => array('id' => 'rid'),
+    'entity class' => 'Drupal\simplequiz_response\Entity\SimpleQuizResponseEntity',
+    'controller class' => 'Drupal\simplequiz_response\Controller\SimpleQuizResponseController',
+    'module' => 'simplequiz_response',
+    'access callback' => 'simplequiz_submission_access_callback',
+  );
+
+  // Return the entity type definitions.
+  return $info;
+}
+
+/**
+ * Implements hook_entity_property_info().
+ */
+function simplequiz_response_entity_property_info() {
+
+  // Store the info definitions.
+  $info = array();
+
+  // Response properties.
+  $info['simplequiz_response']['properties'] = array(
+
+    // Add the aid property.
+    'rid' => array(
+      'label' => t('Response ID'),
+      'description' => t('Identifier for an response (selection) to a question.'),
+      'type' => 'integer',
+      'schema field' => 'rid',
+      'setter callback' => 'entity_property_verbatim_set',
+    ),
+
+    // Add the qnid property.
+    'qnid' => array(
+      'label' => t('Question NID'),
+      'description' => t('The node id of the simplequiz_question.'),
+      'type' => 'integer',
+      'schema field' => 'qnid',
+      'setter callback' => 'entity_property_verbatim_set',
+    ),
+
+    // Add the question property.
+    'question' => array(
+      'label' => t('Question Title'),
+      'description' => t('The title of the question.'),
+      'type' => 'text',
+      'schema field' => 'question',
+      'setter callback' => 'entity_property_verbatim_set',
+    ),
+
+    // Add the response property.
+    'response' => array(
+      'label' => t('User Response'),
+      'description' => t('The title of the response the user entered.'),
+      'type' => 'text',
+      'schema field' => 'response',
+      'setter callback' => 'entity_property_verbatim_set',
+    ),
+
+    // Add the solution property.
+    'solution' => array(
+      'label' => t('Solution'),
+      'description' => t('The title of the solution.'),
+      'type' => 'text',
+      'schema field' => 'solution',
+      'setter callback' => 'entity_property_verbatim_set',
+    ),
+
+    // Add the points property.
+    'points' => array(
+      'label' => t('Points Awarded'),
+      'description' => t('The number of points received for this response.'),
+      'type' => 'integer',
+      'schema field' => 'points',
+      'setter callback' => 'entity_property_verbatim_set',
+    ),
+  );
+
+  // Return the property definitions.
+  return $info;
+}

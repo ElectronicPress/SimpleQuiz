@@ -1,0 +1,69 @@
+<?php
+
+/**
+ * @file
+ * Installation functionality for simplequiz_certificate.
+ */
+
+use Drupal\simplequiz_certificate\Installer\SimpleQuizCertificateInstaller;
+
+/**
+ * Implements hook_requirements().
+ */
+function simplequiz_certificate_requirements() {
+
+  // Start with no requirements.
+  $requirements = array();
+
+  // Get the enabled stream wrappers.
+  $wrappers = file_get_stream_wrappers(STREAM_WRAPPERS_WRITE_VISIBLE);
+
+  // If private isn't enabled.
+  if (!array_key_exists('private', $wrappers)) {
+
+    // Get translation.
+    $t = get_t();
+
+    // Add the requirement.
+    $requirements['simplequiz_certificate_private_files'] = array(
+      'title' => $t('Private file access'),
+      'description' => $t(
+        'Private file access availability is required for simplequiz_certificate.module.  Please check your <a href="@file_system_settings">File System Settings.</a>',
+        array(
+          '@file_system_settings' => url('admin/config/media/file-system'),
+        )
+      ),
+      'severity' => REQUIREMENT_ERROR,
+    );
+  }
+
+  // Return the requirement definitions.
+  return $requirements;
+}
+
+/**
+ * Implements hook_install().
+ */
+function simplequiz_certificate_install() {
+
+  // Run the installation.
+  $settings = new SimpleQuizCertificateInstaller();
+  $settings->install();
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function simplequiz_certificate_uninstall() {
+
+  // Ensure classes have been loaded prior to (un)installation.
+  xautoload()->finder->addPsr4('Drupal\simplequiz\\', __DIR__ . '/src');
+  xautoload()->finder->addPsr4(
+    'Drupal\simplequiz\\',
+    drupal_get_path('module', 'simplequiz') . '/src'
+  );
+
+  // Run the un-installation.
+  $settings = new SimpleQuizCertificateInstaller();
+  $settings->uninstall();
+}
